@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.webmanifest">
+  <title>Расписание</title>
+</head>
+
+<body>
+  <h1>Расписание</h1>
+  <p>Статус <span class="online">⚪</span></p>
+
+  <form name="form">
+    <label class="control">
+      <span class="label">Преподаватель</span>
+      <select name="prep" disabled></select>
+    </label>
+    <label class="control">
+      <span class="label">Аудитория</span>
+      <select name="aud" disabled></select>
+    </label>
+    <label class="control">
+      <span class="label">Группа</span>
+      <select name="grup" disabled></select>
+    </label>
+    <label class="control">
+      <span class="label">Один день</span>
+      <select name="dayBy">
+        <option value="IDA">По аудиториям</option>
+        <option value="IDG">По группам</option>
+        <option value="IDP">По преподавателям</option>
+      </select>
+    </label>
+    <label class="control">
+      <span class="label">Дата</span>
+      <input type="date" name="date" value="2020-10-01">
+    </label>
+  </form>
+
+  <main>
+    <article class="rasp">
+      <section class="rasp__date-section">
+        <h2>Дата 01.10.2024</h2>
+        <details class="rasp__ur-section">
+          <summary>Пара #1</summary>
+          <table></table>
+        </details>
+
+
+        <table class="rasp__table">
+          <caption>Пара #1</caption>
+          <thead>
+            <tr>
+              <th>Аудитория</th>
+              <th colspan="2">Занятие</th>
+            </tr>
+          </thead>
+          <tbody class="rasp__uroki">
+            <tr>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+    </article>
+    <article class="debug">
+      <pre class="debug__uroki"></pre>
+    </article>
+  </main>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        console.log('service worker');
+        navigator.serviceWorker.register('service-worker.js')
+          .then(registration => {
+            console.log(registration);
+            console.log('Service Worker зарегистрирован с областью:', registration.scope);
+          })
+          .catch(error => {
+            console.error('Ошибка регистрации Service Worker:', error);
+          });
+      });
+    }
+  </script>
+  <script src="app.js" type="module"></script>
+</body>
+
+</html>

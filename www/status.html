@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Статус приложения</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Проверка статуса соединения с сервером</h1>
+  </header>
+  <main>
+    <table class="status">
+      <tbody>
+        <tr>
+          <td>online</td>
+          <td class="status__online">⚫</td>
+        </tr>
+        <tr>
+          <td>ETag</td>
+          <td class="status__etag"></td>
+        </tr>
+        <tr>
+          <td>Last-Modified</td>
+          <td class="status__last-modified"></td>
+        </tr>
+        <tr>
+          <td>Last check</td>
+          <td class="status__field-value status__field-value--last-check"></td>
+        </tr>
+        <tr>
+          <td>Синхронизация</td>
+          <td class="status__field-value status__field-value--time-since-last-check"></td>
+        </tr>
+      </tbody>
+    </table>
+  </main>
+
+  <script type="module">
+    const DB_URL = './db/rasp.json';
+
+    const db = {
+      metadata: null,
+      rasp: null
+    }
+
+    const status = {
+      lastModified: null,
+      lastCheck: null
+    }
+
+    function compareMetadata(a, b) {
+      console.log({ a, b });
+
+      if (!a || !b) return -1;
+      if (a.etag !== b.etag) return -1;
+      if (a.lastModified !== b.lastModified) return -1;
+      return 0;
+    }
+
+    const onlineStatusElement = document.querySelector('.status__online');
+    const statusEtagElement = document.querySelector('.status__etag');
+    const lastModifiedElement = document.querySelector('.status__last-modified');
+    const lastCheckElement = document.querySelector('.status__field-value--last-check');
+    const timeSinceLastCheckElement = document.querySelector('.status__field-value--time-since-last-check');
+
+    async function isOnline() {
+      try {
+        const response = await fetch(DB_URL, {
+          method: 'HEAD',
+          cache: 'no-store'
+        });
+        if (!response.ok) return false;
+        const metadata = {
+          etag: response.headers.get('etag'),
+          lastModified: response.headers.get('last-modified')
+        };
+
+        status.lastCheck = new Date();
+
+        if (compareMetadata(metadata, db.metadata) !== 0) {
+          console.log('New metadata, loading new version...');
+          const response = await fetch(DB_URL, { method: 'GET', cache: 'no-store' });
+          if (!response.ok) return false;
+          const metadata = {
+            etag: response.headers.get('etag'),
+            lastModified: response.headers.get('last-modified')
+          };
+
+          const rasp = response.json();
+          console.log('Loaded.');
+
+          db.rasp = rasp;
+          db.metadata = metadata;
+
+          statusEtagElement.textContent = db.metadata.etag;
+          lastModifiedElement.textContent = db.metadata.lastModified;
+
+          status.lastModified = new Date(db.metadata.lastModified);
+
+          lastCheckElement.textContent = status.lastCheck;
+          timeSinceLastCheckElement.textContent = humanizeTime(new Date() - status.lastCheck);
+        }
+
+        return true;
+      } catch (error) {
+        // console.log(error);
+        return false;
+      }
+    };
+
+    let lastOnlineStatus = false;
+    async function checkOnlineStatus() {
+      const timerId = lastOnlineStatus
+        ? setTimeout(() => { onlineStatusElement.textContent = '⚪'; }, 3_000)
+        : null;
+
+      const startTime = Date.now();
+      lastOnlineStatus = await isOnline();
+
+      timeSinceLastCheckElement.textContent = humanizeTime(new Date() - status.lastCheck);
+
+      if (lastOnlineStatus) {
+        clearTimeout(timerId);
+        onlineStatusElement.textContent = '🟢';
+      } else {
+        onlineStatusElement.textContent = '🔴';
+      }
+      const elapsedTime = Date.now() - startTime;
+
+      const minPause = 3_000;
+      if (elapsedTime < minPause) {
+        await new Promise((resolve) => setTimeout(resolve, minPause - elapsedTime));
+      }
+
+      await checkOnlineStatus();
+    };
+
+    await checkOnlineStatus();
+
+    function humanizeTime(milliseconds) {
+      const seconds = Math.floor(milliseconds / 1000);
+      if (seconds < 60) {
+        return `${seconds} сек`;
+      }
+
+      const minutes = Math.floor(seconds / 60);
+      if (minutes < 60) {
+        return `${minutes} мин`;
+      }
+
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) {
+        return `${hours} час`;
+      }
+
+      const days = Math.floor(hours / 24);
+
+      return `${days} дн`;
+    }
+
+
+
+
+  </script>
+</body>
+
+</html>

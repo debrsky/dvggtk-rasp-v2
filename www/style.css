@@ -1,0 +1,84 @@
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  background-color: #f5f5f5;
+  max-width: 500px;
+}
+
+h1 {
+  color: #333;
+}
+
+button {
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.control {
+  display: block;
+  padding: 1ch;
+}
+
+table.rasp {
+  margin: auto;
+}
+
+.debug {
+  text-align: initial;
+  background-color: lightgrey;
+}
+
+.rasp {
+  all: initial;
+  font: inherit;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.rasp-elem {
+  display: block;
+  text-align: center;
+  margin: 0.5ch;
+  width: 100%;
+}
+
+.rasp-elem__start {
+  float: left;
+  background-color: rgba(210, 210, 210, 0.5);
+  padding: 0.3ch;
+  border-radius: 0.3ch;
+}
+
+.rasp-elem__center {
+  background-color: rgba(204, 204, 204, 1);
+  padding: 0.3ch;
+  border-radius: 0.3ch;
+}
+
+.rasp-elem__end {
+  float: right;
+  background-color: rgba(210, 210, 210, 0.5);
+  padding: 0.3ch;
+  border-radius: 0.3ch;
+}
+
+table.rasp-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table.rasp-table th,
+table.rasp-table td {
+  border-top: 1px solid lightgrey;
+  border-bottom: 1px solid lightgrey;
+}
+
+table.rasp-table td:not(:nth-of-type(1)) {
+  width: 50%;
+}
+
+table.rasp-table td:not(:last-of-type) {
+  border-right: 1px solid lightgrey;
+}

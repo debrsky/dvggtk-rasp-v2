@@ -1,0 +1,29 @@
+# Справка по EditorConfig: https://editorconfig.org/
+
+# Корневой файл
+root = true
+
+# Настройки для всех файлов
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+# Настройки для файлов JavaScript, TypeScript, JSON и т.д.
+[*.{js,ts,json,yml,yaml}]
+indent_size = 2
+
+# Настройки для файлов HTML и CSS
+[*.{html,css,scss,sass}]
+indent_size = 2
+
+# Настройки для файлов Markdown
+[*.md]
+trim_trailing_whitespace = false
+
+# Настройки для Git-файлов
+[{.gitignore,.gitattributes}]
+insert_final_newline = false
