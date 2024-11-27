@@ -426,7 +426,7 @@ function createSubgroupsHTML(urok, groupFieldValue, outputOrder, MAXPGG) {
 function createSingleGroupHTML(urok, groupFieldValue, outputOrder, MAXPGG) {
   return `
     <tr>
-      <td>${groupFieldValue}</td>
+      <td>${escapeHtml(groupFieldValue)}</td>
       <td colspan="${MAXPGG}" class="rasp__urok">
         ${createUrokHTML(urok, outputOrder, dictionaries)}
       </td>
