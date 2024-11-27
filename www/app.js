@@ -79,7 +79,7 @@ const filterChangeHandler = async (form) => {
     [...raspElement.querySelectorAll('details')]
       .forEach(detailElement => detailElement.open = saveOpenStatus.shift());
   } else {
-    const dateTo = addDays(dateFrom, 7);
+    const dateTo = addDays(dateFrom, 14);
     const uroki = await getUroki(dateFrom, dateTo).catch(err => []);
 
     const filters = Object.entries({ IDA: aud, IDG: grup, IDP: prep })

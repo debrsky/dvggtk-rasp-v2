@@ -97,7 +97,6 @@ body {
   height: 100%;
   font-size: var(--font-size);
   font-family: 'Arial Narrow', sans-serif;
-  line-height: 1.5;
   color: #444;
 }
 
@@ -123,6 +122,7 @@ body {
 
 .rasp-urok__center {
   display: inline;
+  line-height: 1.5;
   overflow-wrap: break-word;
   word-break: normal;
 }
