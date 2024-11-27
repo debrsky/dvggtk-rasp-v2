@@ -158,41 +158,6 @@ function addDays(dateString, days) {
   return `${year}-${month}-${day}`;
 }
 
-// function prepareUroki(uroki, groupByKey, MAXPGG, URMAX) {
-//   const paramsUndefined = Object.entries({ MAXPGG, URMAX })
-//     .filter(([, value]) => !value)
-//     .map(([name]) => name);
-//   if (paramsUndefined.length > 0) {
-//     throw Error(`Undefined params: ${JSON.stringify(paramsUndefined)}`);
-//   }
-//   if (!['IDA', 'IDG', 'IDP'].includes(groupByKey)) throw Error();
-
-//   const urokiResult = {};
-//   for (const urok of uroki) {
-//     const { ID, DAT, UR, IDG, IDGG, IDA, IDP, IDD } = urok;
-//     if (!urokiResult[DAT]) {
-//       urokiResult[DAT] = Array.from({ length: URMAX }, () => (new Object()));
-//     };
-//     const key = urok[groupByKey];
-//     if (!urokiResult[DAT][UR - 1][key]) {
-//       if (IDGG === 0) {
-//         urokiResult[DAT][UR - 1][key] = urok;
-//       } else {
-//         urokiResult[DAT][UR - 1][key] = Array.from({ length: MAXPGG }, () => (null));
-//       }
-//     }
-
-//     if (IDGG > 0) {
-//       urokiResult[DAT][UR - 1][key][IDGG - 1] = urok;
-//     } else {
-//       urokiResult[DAT][UR - 1][key] = urok;
-//     }
-
-//   }
-
-//   return urokiResult;
-// };
-
 /**
  * Подготавливает уроки для отображения с группировкой по заданному ключу
  *
@@ -266,145 +231,186 @@ function createUrokHTML(urok, [start, center, end], dictionaries) {
   `;
 }
 
+function createRaspHTML(
+  uroki,
+  groupBy = { key: 'IDG', value: null },
+  MAXPGG = 2, URMAX = 8
+) {
+  // Валидация входных данных
+  validateInputs(groupBy, uroki);
 
-function createRaspHTML(uroki, groupBy = { key: 'IDG', value: null }, MAXPGG = 2, URMAX = 8) {
-  if (!groupBy.key) throw Error();
+  const urokiObj = prepareFilteredUroki(uroki, groupBy, MAXPGG, URMAX);
+  const outputOrder = getOutputOrder(groupBy.key);
+
+  return generateRaspHTML(
+    urokiObj,
+    groupBy,
+    outputOrder,
+    MAXPGG
+  );
+}
+
+function validateInputs(groupBy, uroki) {
+  if (!groupBy.key) throw new Error('Group key is required');
+
   const validKeys = ['IDA', 'IDG', 'IDP'];
-  if (!validKeys.includes(groupBy.key)) throw Error();
+  if (!validKeys.includes(groupBy.key)) {
+    throw new Error(`Invalid group key: ${groupBy.key}`);
+  }
+}
 
-  const { preps, auds, grups, preds } = dictionaries;
-  const dicts = { IDA: auds, IDG: grups, IDP: preps, IDD: preds };
-
+function prepareFilteredUroki(uroki, groupBy, MAXPGG, URMAX) {
   const needFilter = groupBy.value !== undefined;
-
   const urokiFiltered = needFilter
     ? uroki.filter(urok => urok[groupBy.key] === groupBy.value)
     : uroki;
 
-  const urokiObj = prepareUroki(urokiFiltered, groupBy.key, MAXPGG, URMAX);
+  return prepareUroki(urokiFiltered, groupBy.key, MAXPGG, URMAX);
+}
 
-  const outputOrder = {
+function getOutputOrder(groupKey) {
+  return {
     IDA: ['IDG', 'IDD', 'IDP'],
     IDG: ['IDA', 'IDD', 'IDP'],
     IDP: ['IDG', 'IDD', 'IDA']
-  }[groupBy.key];
+  }[groupKey];
+}
 
+function generateRaspHTML(urokiObj, groupBy, outputOrder, MAXPGG) {
   const dateHTMLs = [];
-  for (const [date, urs] of (Object.entries(urokiObj))) { // Для каждой даты
-    let urHTML;
-    if (needFilter) {
-      const urokHTMLs = [];
-      let UR = 0;
-      for (const ur of urs) { // Для каждой пары
-        UR++;
-        let urokHTML;
 
-        const urok = ur[groupBy.value];
+  for (const [date, urs] of Object.entries(urokiObj)) {
+    const urHTML = groupBy.value
+      ? generateFilteredDayHTML(urs, groupBy, outputOrder, MAXPGG)
+      : generateFullDayHTML(urs, groupBy, outputOrder, MAXPGG);
 
-        if (!urok) {
-          urokHTML = `<td colspan="${MAXPGG}" class="rasp__urok rasp__urok--empty"></td>`;
-        } else if (Array.isArray(urok)) {
-          urokHTML = urok.map((urokPGG) => {
-            if (!urokPGG) return `<td class="rasp__urok rasp__urok--empty"></td>`;
-            return `<td class="rasp__urok">${createUrokHTML(urokPGG, outputOrder, dictionaries)}</td>`;
-          }).join('');
-        } else {
-          urokHTML = `<td colspan="${MAXPGG}" class="rasp__urok">
-            ${createUrokHTML(urok, outputOrder, dictionaries)}
-          </td>\n`;
-        };
-
-        urokHTMLs.push(`<tr>
-          <td>${UR}</td>
-          ${urokHTML}
-        </tr>`);
-      };
-
-      urHTML = `
-        <table class="rasp__table">
-          <thead>
-            <tr>
-              <th>Пара</th>
-              <th colspan="${MAXPGG}">Занятие</th>
-            </tr>
-          </thead>
-          <tbody>${urokHTMLs.join('')}</tbody>
-        </table>\n`;
-
-    } else {
-      const urHTMLs = [];
-      let UR = 0;
-      for (const ur of urs) { // Для каждой пары
-        UR++;
-        const groupHTMLs = [];
-        for (const [id, urok] of Object.entries(ur)) { // Для каждой группировки
-          const ID = parseInt(id, 10);
-          const groupFieldValue = `${ID === 0 ? '' : dicts[groupBy.key][ID]}`;
-          let valueHTML;
-          if (Array.isArray(urok)) {
-            valueHTML = `<tr>
-              <td>${groupFieldValue}</td>
-              ${urok.map((urokPGG) => {
-              if (!urokPGG) return `<td class="rasp__urok rasp__urok--empty"></td>`;
-              return `<td class="rasp__urok">${createUrokHTML(urokPGG, outputOrder, dictionaries)}</td>`;
-            }).join('')}
-            </tr>\n`;
-          } else {
-            valueHTML = `<tr><td>${groupFieldValue}</td>
-              <td colspan="${MAXPGG}" class="rasp__urok">${createUrokHTML(urok, outputOrder, dictionaries)}</td>
-            </tr>\n`;
-          }
-
-          groupHTMLs.push({ sortValue: groupFieldValue, valueHTML }); // Добавить урок
-        };
-
-        const groupByValue = {
-          IDA: 'Ауд.',
-          IDG: 'Группа',
-          IDP: 'Препод.'
-        }[groupBy.key];
-
-        const groupsHTML = groupHTMLs
-          .sort(({ sortValue: a }, { sortValue: b }) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
-          .map(({ valueHTML }) => valueHTML)
-          .join('');
-
-        let urHTML;
-        if (groupHTMLs.length > 0) {
-          urHTML = `<details class="rasp__ur">
-              <summary style="cursor: pointer;">Пара #${UR}. Количество занятий: ${Object.keys(ur).length}</summary>
-              <table class="rasp__table">
-                <thead>
-                  <tr>
-                    <th>${groupByValue}</th>
-                    <th colspan="${MAXPGG}">Занятие</th>
-                  </tr>
-                </thead>
-                <tbody>${groupsHTML}</tbody>
-              </table>
-            </details>`;
-        } else {
-          urHTML = `<details class="rasp__ur" onclick="return false;">
-              <summary>Пара #${UR}. Количество занятий: ${Object.keys(ur).length}</summary>
-            </details>`;
-        };
-
-        urHTMLs.push(urHTML); // Добавить все уроки для пары
-      }
-
-      urHTML = urHTMLs.join('');
-    }
-
-    const dateHTML = `<section class="rasp__date-section">
-      <h2>${date}</h2>
-      ${urHTML}
-    </section>`;
+    const dateHTML = createDateSectionHTML(date, urHTML);
     dateHTMLs.push(dateHTML);
 
     break; // Только один день
+  }
+
+  return dateHTMLs.join('');
+}
+
+function createDateSectionHTML(date, urHTML) {
+  return `
+    <section class="rasp__date-section">
+      <h2>${date}</h2>
+      ${urHTML}
+    </section>
+  `;
+}
+
+function generateFilteredDayHTML(urs, groupBy, outputOrder, MAXPGG) {
+  const urokHTMLs = [];
+
+  urs.forEach((ur, index) => {
+    const UR = index + 1;
+    let urokHTML;
+    const urok = ur[groupBy.value];
+
+    if (!urok) {
+      urokHTML = `<td colspan="${MAXPGG}" class="rasp__urok rasp__urok--empty"></td>`;
+    } else if (Array.isArray(urok)) {
+      urokHTML = urok.map((urokPGG) => {
+        if (!urokPGG) return `<td class="rasp__urok rasp__urok--empty"></td>`;
+        return `<td class="rasp__urok">${createUrokHTML(urokPGG, outputOrder, dictionaries)}</td>`;
+      }).join('');
+    } else {
+      urokHTML = `<td colspan="${MAXPGG}" class="rasp__urok">
+        ${createUrokHTML(urok, outputOrder, dictionaries)}
+      </td>\n`;
+    }
+
+    urokHTMLs.push(`<tr>
+      <td>${UR}</td>
+      ${urokHTML}
+    </tr>`);
+  });
+
+  return `
+    <table class="rasp__table">
+      <thead>
+        <tr>
+          <th>Пара</th>
+          <th colspan="${MAXPGG}">Занятие</th>
+        </tr>
+      </thead>
+      <tbody>${urokHTMLs.join('')}</tbody>
+    </table>\n`;
+}
+
+function generateFullDayHTML(urs, groupBy, outputOrder, MAXPGG) {
+  const dicts = {
+    IDA: dictionaries.auds,
+    IDG: dictionaries.grups,
+    IDP: dictionaries.preps,
+    IDD: dictionaries.preds
   };
+  const urHTMLs = [];
 
-  const raspHTML = dateHTMLs.join('');
+  urs.forEach((ur, index) => {
+    const UR = index + 1;
+    const groupHTMLs = [];
 
-  return raspHTML;
-};
+    // Для каждой группировки
+    Object.entries(ur).forEach(([id, urok]) => {
+      const ID = parseInt(id, 10);
+      const groupFieldValue = `${ID === 0 ? '' : dicts[groupBy.key][ID]}`;
+
+      let valueHTML;
+      if (Array.isArray(urok)) {
+        valueHTML = `<tr>
+          <td>${groupFieldValue}</td>
+          ${urok.map((urokPGG) => {
+          if (!urokPGG) return `<td class="rasp__urok rasp__urok--empty"></td>`;
+          return `<td class="rasp__urok">${createUrokHTML(urokPGG, outputOrder, dictionaries)}</td>`;
+        }).join('')}
+        </tr>\n`;
+      } else {
+        valueHTML = `<tr><td>${groupFieldValue}</td>
+          <td colspan="${MAXPGG}" class="rasp__urok">${createUrokHTML(urok, outputOrder, dictionaries)}</td>
+        </tr>\n`;
+      }
+
+      groupHTMLs.push({ sortValue: groupFieldValue, valueHTML });
+    });
+
+    const groupByValue = {
+      IDA: 'Ауд.',
+      IDG: 'Группа',
+      IDP: 'Препод.'
+    }[groupBy.key];
+
+    const groupsHTML = groupHTMLs
+      .sort(({ sortValue: a }, { sortValue: b }) =>
+        a.localeCompare(b, undefined, { sensitivity: 'base' }))
+      .map(({ valueHTML }) => valueHTML)
+      .join('');
+
+    let urHTML;
+    if (groupHTMLs.length > 0) {
+      urHTML = `<details class="rasp__ur">
+          <summary style="cursor: pointer;">Пара #${UR}. Количество занятий: ${Object.keys(ur).length}</summary>
+          <table class="rasp__table">
+            <thead>
+              <tr>
+                <th>${groupByValue}</th>
+                <th colspan="${MAXPGG}">Занятие</th>
+              </tr>
+            </thead>
+            <tbody>${groupsHTML}</tbody>
+          </table>
+        </details>`;
+    } else {
+      urHTML = `<details class="rasp__ur" onclick="return false;">
+          <summary>Пара #${UR}. Количество занятий: ${Object.keys(ur).length}</summary>
+        </details>`;
+    }
+
+    urHTMLs.push(urHTML);
+  });
+
+  return urHTMLs.join('');
+}
