@@ -1,6 +1,22 @@
 import { updater } from './updater.js';
 import { getPreps, getAuds, getGrups, getUroki, getPreds, getMinMaxUR, getParam, onReloaded } from './db.js';
 
+const CONFIG = {
+  MAXPGG: 2,
+  URMAX: 8,
+  VALID_GROUP_KEYS: ['IDA', 'IDG', 'IDP'],
+  GROUP_BY_LABELS: {
+    IDA: 'Ауд.',
+    IDG: 'Группа',
+    IDP: 'Препод.'
+  },
+  OUTPUT_ORDER: {
+    IDA: ['IDG', 'IDD', 'IDP'],
+    IDG: ['IDA', 'IDD', 'IDP'],
+    IDP: ['IDG', 'IDD', 'IDA']
+  }
+};
+
 const dictionaries = {};
 const loadDictionaries = async () => {
   const [preps, auds, grups, preds] = await Promise.all([
@@ -11,23 +27,11 @@ const loadDictionaries = async () => {
 
 await loadDictionaries();
 
-// document.getElementById('notify-btn').addEventListener('click', () => {
-//   Notification.requestPermission().then(permission => {
-//     if (permission === 'granted') {
-//       new Notification('Уведомление!', {
-//         body: 'Спасибо, что используете наше PWA приложение!',
-//         icon: 'icon.png'
-//       });
-//     }
-//   });
-// });
-
 const onlineElement = document.querySelector('.online');
 
 let lastIsOnline;
 let lastCheckedDate;
 updater.onUpdate((err, status) => {
-  // console.log(status);
   const { isOnLine, isWaiting, metadata } = status;
   if (!isWaiting) lastIsOnline = isOnLine;
 
@@ -42,26 +46,27 @@ const filterForm = document.forms['filter-form'];
 const prepSelectElement = filterForm.elements.prep;
 const audSelectElement = filterForm.elements.aud;
 const grupSelectElement = filterForm.elements.grup;
-const dateInputElement = filterForm.elements.date;
+
+const filterElementNames = ['grup', 'prep', 'aud', 'one-day-by'];
+const raspElement = document.querySelector('.rasp');
 
 const filterChangeHandler = async (form) => {
-  const dateFrom = form.elements.date.value;
+  const formData = new FormData(form);
+
+  const grup = formData.get('grup');
+  const prep = formData.get('prep');
+  const aud = formData.get('aud');
+  const oneDayByKey = formData.get('one-day-by');
+  const dateFrom = formData.get('date');
   const dateTo = addDays(dateFrom, 1);
+  console.log({ grup, prep, aud, oneDayByKey, dateFrom, dateTo });
+
   const uroki = await getUroki(dateFrom, dateTo).catch(err => []);
-
-  const grup = form.elements.grup.value;
-  const prep = form.elements.prep.value;
-  const aud = form.elements.aud.value;
-  const oneDayByKey = form.elements['one-day-by'].value;
-
-  console.log({ grup, prep, aud, oneDayByKey });
 
   if ([grup, prep, aud, oneDayByKey]
     .filter(value => value !== '')
     .length > 1
   ) throw Error(`Only one must remain: ;${[grup, prep, aud, oneDayByKey]}.`);
-
-  const raspElement = document.querySelector('.rasp');
 
   if (oneDayByKey) {
     if (!['IDA', 'IDG', 'IDP'].includes(oneDayByKey)) throw Error();
@@ -71,7 +76,6 @@ const filterChangeHandler = async (form) => {
     const raspHTML = createRaspHTML(uroki, { key: oneDayByKey });
     raspElement.innerHTML = raspHTML;
 
-    // restore open status
     [...raspElement.querySelectorAll('details')]
       .forEach(detailElement => detailElement.open = saveOpenStatus.shift());
   } else {
@@ -84,8 +88,6 @@ const filterChangeHandler = async (form) => {
     raspElement.innerHTML = raspHTML;
   }
 };
-
-const filterElementNames = ['grup', 'prep', 'aud', 'one-day-by'];
 
 filterForm.addEventListener('change', async (event) => {
   console.time('onchange');
@@ -121,8 +123,8 @@ const fillSelects = (dictionaries) => {
   fillSelect(grups, grupSelectElement);
 };
 
-fillSelects(dictionaries); // no await
-filterChangeHandler(filterForm); // no await
+fillSelects(dictionaries);
+filterChangeHandler(filterForm);
 
 onReloaded(async (err) => {
   if (err) throw err;
@@ -139,20 +141,20 @@ onReloaded(async (err) => {
   console.timeEnd('getParam');
   console.log({ collegeName });
 
-
   console.log('reloaded');
 });
 
-// Функция для прибавления дней к дате
 function addDays(dateString, days) {
   if (!dateString) return dateString;
 
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) {
+    throw new Error('Invalid date format');
+  };
   date.setDate(date.getDate() + days);
 
-  // Форматируем дату обратно в YYYY-MM-DD
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0'); // Месяцы начинаются с 0
+  const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
 
   return `${year}-${month}-${day}`;
@@ -171,10 +173,9 @@ function addDays(dateString, days) {
  * @throws {Error} Если указан некорректный ключ группировки или не заданы MAXPGG и URMAX
  *
  * @example
- * const lessons = prepareUroki(rawLessons, 'IDA', 3, 6);
+ * const urokiObj = prepareUroki(uroki, 'IDA', 3, 6);
  */
 function prepareUroki(uroki, groupByKey, MAXPGG, URMAX) {
-  // Валидация входных параметров
   if (!['IDA', 'IDG', 'IDP'].includes(groupByKey)) {
     throw Error(`Некорректный ключ группировки: ${groupByKey}`);
   };
@@ -182,14 +183,11 @@ function prepareUroki(uroki, groupByKey, MAXPGG, URMAX) {
     throw Error(`MAXPGG и URMAX должы быть заданы`);
   };
 
-  // Использование reduce для более функционального подхода
   return uroki.reduce((result, urok) => {
     const { DAT, UR, IDGG } = urok;
 
-    // Инициализация структуры данных
     result[DAT] ??= Array.from({ length: URMAX }, () => ({}));
 
-    // Логика группировки
     const key = urok[groupByKey];
     const urokSlot = result[DAT][UR - 1];
 
@@ -207,8 +205,18 @@ function prepareUroki(uroki, groupByKey, MAXPGG, URMAX) {
   }, {});
 }
 
+function escapeHtml(unsafe) {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
 function createUrokHTML(urok, [start, center, end], dictionaries) {
+  if (!dictionaries) throw new Error('Dictionaries are required');
+
   const dicts = {
     IDA: dictionaries.auds,
     IDG: dictionaries.grups,
@@ -217,9 +225,10 @@ function createUrokHTML(urok, [start, center, end], dictionaries) {
   };
 
   const createUrokPart = (key) => {
+    if (!dicts[key]) throw new Error(`Dictionary for ${key} not found`);
     const value = dicts[key][urok[key]];
     const subgroupMark = key === 'IDG' && urok.IDGG > 0 ? `[${urok.IDGG}]` : '';
-    return `${value}${subgroupMark}`;
+    return escapeHtml(`${value}${subgroupMark}`);
   };
 
   return `
@@ -233,10 +242,9 @@ function createUrokHTML(urok, [start, center, end], dictionaries) {
 
 function createRaspHTML(
   uroki,
-  groupBy = { key: 'IDG', value: null },
-  MAXPGG = 2, URMAX = 8
+  groupBy = { key: 'IDG', value: null }
 ) {
-  // Валидация входных данных
+  const { MAXPGG, URMAX } = CONFIG;
   validateInputs(groupBy, uroki);
 
   const urokiObj = prepareFilteredUroki(uroki, groupBy, MAXPGG, URMAX);
@@ -253,8 +261,7 @@ function createRaspHTML(
 function validateInputs(groupBy, uroki) {
   if (!groupBy.key) throw new Error('Group key is required');
 
-  const validKeys = ['IDA', 'IDG', 'IDP'];
-  if (!validKeys.includes(groupBy.key)) {
+  if (!CONFIG.VALID_GROUP_KEYS.includes(groupBy.key)) {
     throw new Error(`Invalid group key: ${groupBy.key}`);
   }
 }
@@ -269,13 +276,8 @@ function prepareFilteredUroki(uroki, groupBy, MAXPGG, URMAX) {
 }
 
 function getOutputOrder(groupKey) {
-  return {
-    IDA: ['IDG', 'IDD', 'IDP'],
-    IDG: ['IDA', 'IDD', 'IDP'],
-    IDP: ['IDG', 'IDD', 'IDA']
-  }[groupKey];
+  return CONFIG.OUTPUT_ORDER[groupKey];
 }
-
 function generateRaspHTML(urokiObj, groupBy, outputOrder, MAXPGG) {
   const dateHTMLs = [];
 
@@ -287,7 +289,7 @@ function generateRaspHTML(urokiObj, groupBy, outputOrder, MAXPGG) {
     const dateHTML = createDateSectionHTML(date, urHTML);
     dateHTMLs.push(dateHTML);
 
-    break; // Только один день
+    break; // только один день
   }
 
   return dateHTMLs.join('');
@@ -348,69 +350,107 @@ function generateFullDayHTML(urs, groupBy, outputOrder, MAXPGG) {
     IDP: dictionaries.preps,
     IDD: dictionaries.preds
   };
-  const urHTMLs = [];
 
-  urs.forEach((ur, index) => {
+  const urHTMLs = urs.map((ur, index) => {
     const UR = index + 1;
-    const groupHTMLs = [];
-
-    // Для каждой группировки
-    Object.entries(ur).forEach(([id, urok]) => {
-      const ID = parseInt(id, 10);
-      const groupFieldValue = `${ID === 0 ? '' : dicts[groupBy.key][ID]}`;
-
-      let valueHTML;
-      if (Array.isArray(urok)) {
-        valueHTML = `<tr>
-          <td>${groupFieldValue}</td>
-          ${urok.map((urokPGG) => {
-          if (!urokPGG) return `<td class="rasp__urok rasp__urok--empty"></td>`;
-          return `<td class="rasp__urok">${createUrokHTML(urokPGG, outputOrder, dictionaries)}</td>`;
-        }).join('')}
-        </tr>\n`;
-      } else {
-        valueHTML = `<tr><td>${groupFieldValue}</td>
-          <td colspan="${MAXPGG}" class="rasp__urok">${createUrokHTML(urok, outputOrder, dictionaries)}</td>
-        </tr>\n`;
-      }
-
-      groupHTMLs.push({ sortValue: groupFieldValue, valueHTML });
-    });
-
-    const groupByValue = {
-      IDA: 'Ауд.',
-      IDG: 'Группа',
-      IDP: 'Препод.'
-    }[groupBy.key];
-
-    const groupsHTML = groupHTMLs
-      .sort(({ sortValue: a }, { sortValue: b }) =>
-        a.localeCompare(b, undefined, { sensitivity: 'base' }))
-      .map(({ valueHTML }) => valueHTML)
-      .join('');
-
-    let urHTML;
-    if (groupHTMLs.length > 0) {
-      urHTML = `<details class="rasp__ur">
-          <summary style="cursor: pointer;">Пара #${UR}. Количество занятий: ${Object.keys(ur).length}</summary>
-          <table class="rasp__table">
-            <thead>
-              <tr>
-                <th>${groupByValue}</th>
-                <th colspan="${MAXPGG}">Занятие</th>
-              </tr>
-            </thead>
-            <tbody>${groupsHTML}</tbody>
-          </table>
-        </details>`;
-    } else {
-      urHTML = `<details class="rasp__ur" onclick="return false;">
-          <summary>Пара #${UR}. Количество занятий: ${Object.keys(ur).length}</summary>
-        </details>`;
+    if (Object.keys(ur).length === 0) {
+      return createEmptyUrHTML(UR);
     }
 
-    urHTMLs.push(urHTML);
+    const groupHTMLs = Object.entries(ur)
+      .map(([id, urok]) => createGroupHTML(id, urok, groupBy, outputOrder, MAXPGG, dicts))
+      .sort((a, b) => a.sortValue.localeCompare(b.sortValue, undefined, { sensitivity: 'base' }));
+
+    return createUrDetailsHTML(UR, groupHTMLs, groupBy.key);
   });
 
   return urHTMLs.join('');
+}
+
+function createEmptyUrHTML(urNumber) {
+  return `
+    <details class="rasp__ur" onclick="return false;">
+      <summary>Пара #${urNumber}. Количество занятий: 0</summary>
+    </details>
+  `;
+}
+
+function createGroupHTML(id, urok, groupBy, outputOrder, MAXPGG, dicts) {
+  const ID = parseInt(id, 10);
+  const groupFieldValue = `${ID === 0 ? '' : dicts[groupBy.key][ID]}`;
+
+  let html;
+  if (Array.isArray(urok)) {
+    html = createSubgroupsHTML(urok, groupFieldValue, outputOrder, MAXPGG);
+  } else {
+    html = createSingleGroupHTML(urok, groupFieldValue, outputOrder, MAXPGG);
+  }
+
+  return {
+    sortValue: groupFieldValue,
+    html
+  };
+}
+
+function createSubgroupsHTML(urok, groupFieldValue, outputOrder, MAXPGG) {
+  const subgroupCells = urok.map(urokPGG => {
+    if (!urokPGG) {
+      return `<td class="rasp__urok rasp__urok--empty"></td>`;
+    }
+    return `
+      <td class="rasp__urok">
+        ${createUrokHTML(urokPGG, outputOrder, dictionaries)}
+      </td>
+    `;
+  }).join('');
+
+  return `
+    <tr>
+      <td>${groupFieldValue}</td>
+      ${subgroupCells}
+    </tr>
+  `;
+}
+
+function createSingleGroupHTML(urok, groupFieldValue, outputOrder, MAXPGG) {
+  return `
+    <tr>
+      <td>${groupFieldValue}</td>
+      <td colspan="${MAXPGG}" class="rasp__urok">
+        ${createUrokHTML(urok, outputOrder, dictionaries)}
+      </td>
+    </tr>
+  `;
+}
+
+function createUrDetailsHTML(urNumber, groupHTMLs, groupByKey) {
+  const groupByLabel = CONFIG.GROUP_BY_LABELS[groupByKey];
+  const lessonCount = groupHTMLs.length;
+
+  if (lessonCount === 0) {
+    return createEmptyUrHTML(urNumber);
+  }
+
+  const tableHTML = `
+    <table class="rasp__table">
+      <thead>
+        <tr>
+          <th>${groupByLabel}</th>
+          <th colspan="${CONFIG.MAXPGG}">Занятие</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${groupHTMLs.map(({ html }) => html).join('')}
+      </tbody>
+    </table>
+  `;
+
+  return `
+    <details class="rasp__ur">
+      <summary style="cursor: pointer;">
+        Пара #${urNumber}. Количество занятий: ${lessonCount}
+      </summary>
+      ${tableHTML}
+    </details>
+  `;
 }
