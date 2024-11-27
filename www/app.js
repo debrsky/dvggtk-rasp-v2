@@ -344,6 +344,11 @@ function generateFilteredDayHTML(urs, groupBy, outputOrder, MAXPGG) {
 
   return `
     <table class="rasp__table">
+      <colgroup>
+        <col style="width: 3ch;">
+        ${Array.from({ length: MAXPGG },
+    () => `<col style="width: calc((100% - 3ch;)/${MAXPGG});">\n`).join('')}
+      </colgroup>
       <thead>
         <tr>
           <th>Пара</th>
@@ -417,7 +422,7 @@ function createSubgroupsHTML(urok, groupFieldValue, outputOrder, MAXPGG) {
 
   return `
     <tr>
-      <td>${groupFieldValue}</td>
+      <td class="rasp__group-field-value">${groupFieldValue}</td>
       ${subgroupCells}
     </tr>
   `;
@@ -444,6 +449,11 @@ function createUrDetailsHTML(urNumber, groupHTMLs, groupByKey) {
 
   const tableHTML = `
     <table class="rasp__table">
+      <colgroup>
+        <col style="width: 10ch;">
+        ${Array.from({ length: CONFIG.MAXPGG },
+    () => `<col style="width: calc((100% - 10ch;)/${CONFIG.MAXPGG});">\n`).join('')}
+      </colgroup>
       <thead>
         <tr>
           <th>${groupByLabel}</th>

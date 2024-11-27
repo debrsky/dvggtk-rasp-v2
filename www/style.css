@@ -59,6 +59,7 @@ body {
   width: 100%;
   border-collapse: collapse;
   box-sizing: border-box;
+  table-layout: fixed;
 }
 
 .rasp__table th,
@@ -67,22 +68,14 @@ body {
   border-bottom: 1px solid darkgrey;
 }
 
-.rasp__table th:nth-of-type(1) {
-  width: 10ch;
-}
-
-.rasp__table th:nth-of-type(2) {
-  width: 100%;
-}
-
-.rasp__table td:not(:nth-of-type(1)) {
-  width: 50%;
-}
-
 .rasp__table td:not(:last-of-type) {
   border-right: 1px solid lightgrey;
 }
 
+.rasp__group-field-value {
+  overflow-wrap: break-word;
+  word-break: normal;
+}
 
 .rasp__urok {
   padding: 3px 3px 3px 3px;
