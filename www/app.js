@@ -30,7 +30,6 @@ await loadDictionaries();
 const onlineElement = document.querySelector('.online');
 
 let lastIsOnline;
-let lastCheckedDate;
 updater.onUpdate((err, status) => {
   const { isOnLine, isWaiting, metadata } = status;
   if (!isWaiting) lastIsOnline = isOnLine;
@@ -46,6 +45,7 @@ const filterForm = document.forms['filter-form'];
 const prepSelectElement = filterForm.elements.prep;
 const audSelectElement = filterForm.elements.aud;
 const grupSelectElement = filterForm.elements.grup;
+const dateInputElement = filterForm.elements.date;
 
 const filterElementNames = ['grup', 'prep', 'aud', 'one-day-by'];
 const raspElement = document.querySelector('.rasp');
@@ -58,10 +58,7 @@ const filterChangeHandler = async (form) => {
   const aud = formData.get('aud');
   const oneDayByKey = formData.get('one-day-by');
   const dateFrom = formData.get('date');
-  const dateTo = addDays(dateFrom, 1);
-  console.log({ grup, prep, aud, oneDayByKey, dateFrom, dateTo });
-
-  const uroki = await getUroki(dateFrom, dateTo).catch(err => []);
+  console.log({ grup, prep, aud, oneDayByKey, dateFrom });
 
   if ([grup, prep, aud, oneDayByKey]
     .filter(value => value !== '')
@@ -71,6 +68,9 @@ const filterChangeHandler = async (form) => {
   if (oneDayByKey) {
     if (!['IDA', 'IDG', 'IDP'].includes(oneDayByKey)) throw Error();
 
+    const dateTo = addDays(dateFrom, 1);
+    const uroki = await getUroki(dateFrom, dateTo).catch(err => []);
+
     const saveOpenStatus = [...raspElement.querySelectorAll('details')].map(element => element.open);
 
     const raspHTML = createRaspHTML(uroki, { key: oneDayByKey });
@@ -79,6 +79,9 @@ const filterChangeHandler = async (form) => {
     [...raspElement.querySelectorAll('details')]
       .forEach(detailElement => detailElement.open = saveOpenStatus.shift());
   } else {
+    const dateTo = addDays(dateFrom, 7);
+    const uroki = await getUroki(dateFrom, dateTo).catch(err => []);
+
     const filters = Object.entries({ IDA: aud, IDG: grup, IDP: prep })
       .filter(([key, value]) => value !== '');
     if (filters.length !== 1) throw Error();
@@ -289,7 +292,7 @@ function generateRaspHTML(urokiObj, groupBy, outputOrder, MAXPGG) {
     const dateHTML = createDateSectionHTML(date, urHTML);
     dateHTMLs.push(dateHTML);
 
-    break; // только один день
+    // break; // только один день
   }
 
   return dateHTMLs.join('');
