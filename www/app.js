@@ -126,6 +126,9 @@ const fillSelects = (dictionaries) => {
   fillSelect(grups, grupSelectElement);
 };
 
+const today = new Date().toISOString().split('T')[0];
+dateInputElement.value = today;
+
 fillSelects(dictionaries);
 filterChangeHandler(filterForm);
 
