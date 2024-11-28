@@ -18,24 +18,29 @@
     <form name="filter-form">
       <article class="filter">
         <label class="filter__param control">
-          <select name="grup" data-title="<группа>"></select>
+          <span class="control__label">Группа</span>
+          <select name="grup"></select>
         </label>
         <label class="filter__param control">
-          <select name="prep" data-title="<преподаватель>"></select>
+          <span class="control__label">Преподаватель</span>
+          <select name="prep"></select>
         </label>
         <label class="filter__param control">
-          <select name="aud" data-title="<аудитория>"></select>
+          <span class="control__label">Аудитория</span>
+          <select name="aud"></select>
         </label>
         <label class="filter__param control">
-          <select name="one-day-by" data-title="<один день>">
-            <option value="">&lt;один день&gt;</option>
+          <span class="control__label">Один день</span>
+          <select name="one-day-by">
+            <option value="" disabled selected hidden></option>
+
             <option value="IDA">По аудиториям</option>
             <option value="IDG" selected>По группам</option>
             <option value="IDP">По преподавателям</option>
           </select>
         </label>
         <label class="filter__param control">
-          <span class="label">Дата</span>
+          <span class="control__label">Дата</span>
           <input type="date" name="date" value="2020-10-01">
         </label>
       </article>
@@ -44,33 +49,7 @@
 
   <main>
     <article class="rasp">
-      <section class="rasp__date-section">
-        <h2>Дата 01.10.2024</h2>
-        <details class="rasp__ur-section">
-          <summary>Пара #1</summary>
-          <table></table>
-        </details>
 
-
-        <table class="rasp__table">
-          <caption>Пара #1</caption>
-          <thead>
-            <tr>
-              <th>Аудитория</th>
-              <th colspan="2">Занятие</th>
-            </tr>
-          </thead>
-          <tbody class="rasp__uroki">
-            <tr>
-              <td></td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-
-    </article>
-    <article class="debug">
-      <pre class="debug__uroki"></pre>
     </article>
   </main>
 

@@ -31,6 +31,7 @@ body {
 .header__online-status {
   display: block;
   float: right;
+  margin-top: 5px;
 }
 
 /* clear-fix */
@@ -47,12 +48,28 @@ body {
 }
 
 .control {
-  display: block;
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
   padding: 1ch;
+  width: min-content;
+}
+
+.control__label {
+  font-size: .8rem;
 }
 
 .rasp {
   font: inherit;
+}
+
+.rasp__date-title {
+  text-align: center;
+  color: #444;
+}
+
+.rasp__ur-title {
+  color: #444;
 }
 
 .rasp__table {
@@ -60,6 +77,10 @@ body {
   border-collapse: collapse;
   box-sizing: border-box;
   table-layout: fixed;
+}
+
+table.rasp__table--hidden-thead thead {
+  display: none;
 }
 
 .rasp__table th,
