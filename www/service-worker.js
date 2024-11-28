@@ -11,6 +11,7 @@ self.addEventListener('install', event => {
         './app.js',
         './updater.js',
         './db.js',
+        './render.js',
         './icon.png',
         './icon-512.png',
         './manifest.webmanifest'
