@@ -422,7 +422,7 @@ function createSubgroupsHTML(urok, groupFieldValue, outputOrder, MAXPGG) {
 
   return `
     <tr>
-      <td class="rasp__group-field-value">${groupFieldValue}</td>
+      <td class="rasp__group-field-value">${escapeHtml(groupFieldValue)}</td>
       ${subgroupCells}
     </tr>
   `;
@@ -431,7 +431,7 @@ function createSubgroupsHTML(urok, groupFieldValue, outputOrder, MAXPGG) {
 function createSingleGroupHTML(urok, groupFieldValue, outputOrder, MAXPGG) {
   return `
     <tr>
-      <td>${escapeHtml(groupFieldValue)}</td>
+      <td class="rasp__group-field-value">${escapeHtml(groupFieldValue)}</td>
       <td colspan="${MAXPGG}" class="rasp__urok">
         ${createUrokHTML(urok, outputOrder, dictionaries)}
       </td>
