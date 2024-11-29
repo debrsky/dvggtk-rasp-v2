@@ -11,7 +11,14 @@ export function generateRaspHTML(urokiObj, groupBy, outputOrder, MAXPGG, dicts) 
 
   const dateHTMLs = [];
 
-  for (const [date, urs] of Object.entries(urokiObj)) {
+  const urokiSortedByDate = Object.entries(urokiObj)
+    .sort(([a], [b]) => {
+      if (a < b) return -1;
+      if (a > b) return 1;
+      return 0;
+    })
+
+  for (const [date, urs] of urokiSortedByDate) {
     const urHTML = groupBy.value
       ? generateFilteredDayHTML(urs, groupBy, outputOrder)
       : generateFullDayHTML(urs, groupBy, outputOrder);

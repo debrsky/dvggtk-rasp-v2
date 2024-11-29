@@ -13,8 +13,7 @@ self.addEventListener('install', event => {
         './db.js',
         './render.js',
         './icon.png',
-        './icon-512.png',
-        './manifest.webmanifest'
+        './icon-512.png'
       ]);
     })
   );
