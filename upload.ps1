@@ -118,11 +118,20 @@ try {
     # Отправляем POST-запрос
     $response = $httpClient.PostAsync($url, $form).Result
 
-    # Получаем и выводим ответ
-    $responseString = $response.Content.ReadAsStringAsync().Result
-    $jsonObject = $responseString | ConvertFrom-Json
-    $formattedJson = $jsonObject | ConvertTo-Json -Depth 10
-    Write-Output $formattedJson
+    # Проверяем статус код
+    if ($response.IsSuccessStatusCode) {
+        # Получаем и выводим ответ
+        $responseString = $response.Content.ReadAsStringAsync().Result
+        $jsonObject = $responseString | ConvertFrom-Json
+        $formattedJson = $jsonObject | ConvertTo-Json -Depth 10
+        Write-Output $formattedJson
+    } else {
+        # Обработка ошибки
+        $statusCode = [int]$response.StatusCode
+        Write-Host "POST request failed with status code $statusCode ($($response.StatusCode.ToString()))" -ForegroundColor Red
+        Write-Host "Response content: $($response.Content.ReadAsStringAsync().Result)" -ForegroundColor Red
+        throw "POST request failed with status code $statusCode ($($response.StatusCode.ToString()))" # Перебрасываем ошибку с кодом статуса
+    }
 
     # Удаляем временную директорию и закрываем ресурсы
     Remove-Item $tempDir -Recurse -Force
