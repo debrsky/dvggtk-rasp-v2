@@ -49,6 +49,23 @@ function createUrokHTML(urok, [start, center, end]) {
   `;
 }
 
+
+function getEmojiByDate(date) {
+  const emojis = [
+    '🧘‍♂️', // Воскресенье
+    '☀️', // Понедельник
+    '📊', // Вторник
+    '🗂️', // Среда
+    '🔍', // Четверг
+    '🤩', // Пятница
+    '🏢'  // Суббота
+  ];
+
+  const dayOfWeek = date.getDay();
+  return emojis[dayOfWeek];
+}
+
+
 function createDateSectionHTML(date, urHTML) {
   const options = {
     weekday: 'long', // длинное название дня недели
@@ -56,9 +73,13 @@ function createDateSectionHTML(date, urHTML) {
     day: 'numeric'    // числовое значение дня
   };
 
+  const dateValue = new Date(date);
+  const dateText = dateValue.toLocaleDateString(navigator.language, options);
+  const dateEmoji = getEmojiByDate(dateValue);
+
   return `
     <section class="rasp__date-section">
-      <h3 class="rasp__date-title">${new Date(date).toLocaleDateString(navigator.language, options)}</h2>
+      <h3 class="rasp__date-title">${dateEmoji} ${dateText}</h2>
       ${urHTML}
     </section>
   `;
