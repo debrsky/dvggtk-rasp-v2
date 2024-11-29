@@ -1,3 +1,6 @@
+const DATABASE_NAME = 'rasp';
+const DATABASE_VERSION = 3;
+
 const TABLES = [
   ['UROKI', 'ID', null],
   ['SPGRUP', 'IDG', 'NAIM'],
@@ -19,15 +22,22 @@ const CACHE = {
 
 let db;
 
+export const deleteDB = async () => {
+  await new Promise((resolve, reject) => {
+    if (db) db.close();
+    const request = indexedDB.deleteDatabase(DATABASE_NAME);
+    request.onsuccess = () => resolve();
+    request.onerror = (event) => reject(event.target.error);
+    request.onblocked = () => reject(Error(`Удаление базы данных ${DATABASE_NAME} заблокировано`));
+  });
+};
+
 const reloadedListeners = [];
 export const onReloaded = (cb) => reloadedListeners.push(cb);
 
 export const openDB = () => {
-  const dbName = 'rasp'
-  const version = 1;
-
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(dbName, version);
+    const request = indexedDB.open(DATABASE_NAME, DATABASE_VERSION);
 
     request.onerror = (event) => reject(event.target.error);
 
@@ -311,6 +321,8 @@ export const getDicts = async () => {
 
       const entries = records
         .map(({ [keyField]: key, [valueField]: value }) => ([key, value]));
+
+      if (storeName === 'SPKAUD') entries.push([0, '⬜']);
 
       return [keyField, Object.fromEntries(entries)];
     })));

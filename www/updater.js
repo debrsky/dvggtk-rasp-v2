@@ -1,4 +1,13 @@
-import { openDB, saveMetadata, getMetadata, loadRasp } from './db.js';
+import { openDB, deleteDB, saveMetadata, getMetadata, loadRasp } from './db.js';
+
+const savedVERSION = localStorage.getItem('VERSION');
+const VERSION = '1.0.1';
+if (VERSION !== savedVERSION) {
+  await deleteDB().catch((err) => {
+    console.error(err);
+  })
+};
+localStorage.setItem('VERSION', VERSION);
 
 const RASP_URL = './db/rasp.json';
 
