@@ -91,6 +91,9 @@ h2 {
   color: var(--text-color);
   background-color: var(--background-color);
   border: 1px solid var(--border-color);
+  border-radius: 2px;
+
+  color-scheme: dark light;
 }
 
 .control__label {
