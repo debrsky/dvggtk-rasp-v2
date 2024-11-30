@@ -159,7 +159,7 @@ function createEmptyUrHTML(urNumber) {
 
 function createGroupHTML(id, urok, groupBy, outputOrder) {
   const ID = parseInt(id, 10);
-  const groupFieldValue = `${ID === 0 ? '' : CONFIG.DICTS[groupBy.key][ID]}`;
+  const groupFieldValue = `${CONFIG.DICTS[groupBy.key][ID]}`;
 
   let html;
   if (Array.isArray(urok)) {
