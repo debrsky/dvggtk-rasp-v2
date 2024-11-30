@@ -1,3 +1,5 @@
+// TODO Сделать рендеринг потоков -- когда несколько групп на одном занятии
+
 const CONFIG = {
   MAXPGG: null,
   DICTS: null
@@ -79,7 +81,7 @@ function createDateSectionHTML(date, urHTML) {
 
   return `
     <section class="rasp__date-section">
-      <h3 class="rasp__date-title">${dateEmoji} ${dateText}</h2>
+      <h2 class="rasp__date-title">${dateEmoji} ${dateText}</h2>
       ${urHTML}
     </section>
   `;
