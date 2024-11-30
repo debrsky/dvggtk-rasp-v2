@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="style.css">
   <link rel="manifest" href="manifest.webmanifest">
   <title>Расписание</title>
-  <script type="module" src="check.js"></script>
+  <meta name="description" content="расписание занятий ДВГГТК">
 </head>
 
 <body>
@@ -34,9 +34,8 @@
           <span class="control__label">Один день</span>
           <select name="one-day-by">
             <option value="" disabled selected hidden></option>
-
             <option value="IDA">По аудиториям</option>
-            <option value="IDG" selected>По группам</option>
+            <option value="IDG">По группам</option>
             <option value="IDP">По преподавателям</option>
           </select>
         </label>
@@ -49,15 +48,65 @@
   </header>
 
   <main>
-    <article class="rasp">
-
+    <article class="timetable">
+      <details>
+        <summary style="cursor: pointer;">расписание звонков</summary>
+        <table class="timetable__table">
+          <colgroup>
+            <col>
+            <col>
+            <col>
+          </colgroup>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>ПН</th>
+              <th>ВТ - СБ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td colspan="2">8¹⁵-9⁴⁵</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td colspan="2">9⁵⁵-11²⁵</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td colspan="2">11³⁵-13⁰⁵</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td>Классный<br>час<br>13¹⁵-14⁰⁰</td>
+              <td>13²⁵-14⁵⁵</td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td>14²⁰-15⁵⁰</td>
+              <td>15⁰⁵-16³⁵</td>
+            </tr>
+            <tr>
+              <td>6</td>
+              <td>16⁰⁰-17³⁰</td>
+              <td>16⁴⁵-18¹⁵</td>
+            </tr>
+            <tr>
+              <td>7</td>
+              <td>17⁴⁰-19¹⁰</td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </details>
     </article>
+    <article class="rasp"></article>
   </main>
 
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        console.log('service worker');
         navigator.serviceWorker.register('service-worker.js')
           .then(registration => {
             console.log(registration);
