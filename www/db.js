@@ -23,6 +23,8 @@ const CACHE = {
 let db;
 
 export const deleteDB = async () => {
+  if (!(await indexedDB.databases()).some(db => db.name === DATABASE_NAME)) return;
+
   await new Promise((resolve, reject) => {
     if (db) db.close();
     const request = indexedDB.deleteDatabase(DATABASE_NAME);
