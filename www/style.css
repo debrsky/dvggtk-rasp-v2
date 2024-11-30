@@ -116,16 +116,13 @@ table.timetable__table {
 table.timetable__table th,
 table.timetable__table td {
   border-top: 1px solid var(--border-color);
-  ;
   border-bottom: 1px solid var(--border-color);
-  ;
   padding: 3px;
 }
 
 table.timetable__table th:not(:last-of-type),
 table.timetable__table td:not(:last-of-type) {
   border-right: 1px solid var(--border-color);
-  ;
   padding: 3px;
 }
 
