@@ -16,8 +16,8 @@
       <h1 class="header__title">🗓️ Расписание</h1>
       <div class="header__online-status online">⚪</div>
     </article>
-    <form name="filter-form">
-      <article class="filter">
+    <article class="filter">
+      <form class="filter__form" name="filter-form">
         <label class="filter__param control">
           <span class="control__label">Группа</span>
           <select name="grup"></select>
@@ -43,13 +43,13 @@
           <span class="control__label">Дата</span>
           <input type="date" name="date" value="2020-10-01">
         </label>
-      </article>
-    </form>
+      </form>
+    </article>
   </header>
 
   <main>
     <article class="timetable">
-      <details>
+      <details class="details">
         <summary style="cursor: pointer;">расписание звонков</summary>
         <table class="timetable__table">
           <colgroup>

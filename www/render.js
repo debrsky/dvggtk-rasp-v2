@@ -114,12 +114,13 @@ function generateFilteredDayHTML(urs, groupBy, outputOrder) {
     </tr>`);
   });
 
+  const firstColWidth = '2ch';
   return `
-    <table class="rasp__table rasp__table--hidden-thead">
+    <table class="rasp__table rasp__table--day-filtered">
       <colgroup>
-        <col style="width: 3ch;">
+        <col style="width: ${firstColWidth};">
         ${Array.from({ length: CONFIG.MAXPGG },
-    () => `<col style="width: calc((100% - 3ch;)/${CONFIG.MAXPGG});">\n`).join('')}
+    () => `<col style="width: calc((100% - ${firstColWidth})/${CONFIG.MAXPGG});">\n`).join('')}
       </colgroup>
       <thead>
         <tr>
@@ -150,7 +151,7 @@ function generateFullDayHTML(urs, groupBy, outputOrder) {
 
 function createEmptyUrHTML(urNumber) {
   return `
-    <details class="rasp__ur" onclick="return false;">
+    <details class="details rasp__ur" onclick="return false;">
       <summary>Пара #${urNumber}. Количество занятий: 0</summary>
     </details>
   `;
@@ -216,12 +217,15 @@ function createUrDetailsHTML(urNumber, groupHTMLs, groupByKey) {
     return createEmptyUrHTML(urNumber);
   }
 
+  const firstColWidth = '12ch';
   const tableHTML = `
-    <table class="rasp__table">
+    <table class="rasp__table rasp__table--one-day">
       <colgroup>
-        <col style="width: 15ch;">
+        <col style="width: ${firstColWidth};">
         ${Array.from({ length: CONFIG.MAXPGG },
-    () => `<col style="width: calc((100% - 10ch;)/${CONFIG.MAXPGG});">\n`).join('')}
+    () => `<col
+              style="width: calc((100% - ${firstColWidth})/${CONFIG.MAXPGG});"
+          >\n`).join('')}
       </colgroup>
       <thead>
         <tr>
@@ -236,9 +240,9 @@ function createUrDetailsHTML(urNumber, groupHTMLs, groupByKey) {
   `;
 
   return `
-    <details class="rasp__ur">
+    <details class="details rasp_ur">
       <summary style="cursor: pointer;">
-        Пара #${urNumber}. Количество занятий: ${lessonCount}
+        Пара #${urNumber}. Всего занятий: ${lessonCount}
       </summary>
       ${tableHTML}
     </details>
