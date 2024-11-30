@@ -4,6 +4,18 @@
   box-sizing: inherit;
 }
 
+:root {
+  --background-color: #f5f5f5;
+  --text-color: #333;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background-color: #333;
+    --text-color: #bbb;
+  }
+}
+
 html {
   box-sizing: border-box;
   font-family: Arial, sans-serif;
@@ -13,8 +25,8 @@ html {
 body {
   margin: 0;
   padding: 0 5px;
-  background-color: #f5f5f5;
-  color: #333;
+  background-color: var(--background-color);
+  color: var(--text-color);
   max-width: 500px;
   min-width: 320px;
 }
@@ -72,6 +84,10 @@ h2 {
 .control input,
 .control select {
   font-size: inherit;
+
+  color: var(--text-color);
+  background-color: var(--background-color);
+  border: 1px solid currentColor;
 }
 
 .control__label {
@@ -94,14 +110,17 @@ table.timetable__table {
 
 table.timetable__table th,
 table.timetable__table td {
-  border-top: 1px solid darkgrey;
-  border-bottom: 1px solid darkgrey;
+  border-top: 1px solid var(--text-color);
+  ;
+  border-bottom: 1px solid var(--text-color);
+  ;
   padding: 3px;
 }
 
 table.timetable__table th:not(:last-of-type),
 table.timetable__table td:not(:last-of-type) {
-  border-right: 1px solid darkgrey;
+  border-right: 1px solid var(--text-color);
+  ;
   padding: 3px;
 }
 
@@ -132,11 +151,10 @@ details.details summary {
 
 .rasp__date-title {
   text-align: center;
-  color: #444;
 }
 
 .rasp__ur-title {
-  color: #444;
+  color: inherit;
 }
 
 .rasp__table {
@@ -156,12 +174,12 @@ table.rasp__table--day-filtered thead {
 
 .rasp__table th,
 .rasp__table td {
-  border-top: 1px solid darkgrey;
-  border-bottom: 1px solid darkgrey;
+  border-top: 1px solid var(--text-color);
+  border-bottom: 1px solid var(--text-color);
 }
 
 .rasp__table td:not(:last-of-type) {
-  border-right: 1px solid lightgrey;
+  border-right: 1px solid var(--text-color);
 }
 
 .rasp__group-field-value {
@@ -182,7 +200,7 @@ table.rasp__table--day-filtered thead {
   height: 100%;
   font-size: var(--font-size);
   font-family: 'Arial Narrow', sans-serif;
-  color: #444;
+  color: inherit;
 }
 
 /* clear-fix */
@@ -199,8 +217,8 @@ table.rasp__table--day-filtered thead {
   padding-right: 2px;
   margin-right: 3px;
   border-radius: 0 0 5px 0;
-  border-right: 1px solid darkgrey;
-  border-bottom: 1px solid darkgrey;
+  border-right: 1px solid var(--text-color);
+  border-bottom: 1px solid var(--text-color);
   height: fit-content;
   word-break: break-all;
 }
@@ -219,8 +237,8 @@ table.rasp__table--day-filtered thead {
   padding-left: 2px;
   margin-left: 3px;
   border-radius: 5px 0 0 0;
-  border-top: 1px solid darkgrey;
-  border-left: 1px solid darkgrey;
+  border-top: 1px solid var(--text-color);
+  border-left: 1px solid var(--text-color);
   height: fit-content;
   word-break: break-all;
 }
