@@ -108,13 +108,26 @@ const performTransaction = async (storeName, mode, operationCallback) => {
 export const loadRasp = async (rasp) => {
   CACHE.DICTS = null;
 
+  const existIds = {};
+  const sprIds = TABLES
+    .filter(([tableName]) => tableName !== 'UROKI')
+    .map(([tableName, ID]) => ID);
+
+  sprIds.forEach((ID) => {
+    if (!existIds[ID]) existIds[ID] = new Set();
+  });
+
+  for (const urok of rasp.UROKI) {
+    sprIds.forEach((ID) => existIds[ID].add(urok[ID]));
+  };
+
   const storeNames = TABLES.map(([tableName]) => tableName);
   await new Promise((resolve, reject) => {
     const transaction = db.transaction([PARAMS_STORE_NAME, ...storeNames], 'readwrite');
     transaction.onerror = (event) => reject(event.target.error);
     transaction.oncomplete = () => resolve();
 
-    storeNames.forEach(storeName => {
+    TABLES.forEach(([storeName, ID]) => {
       const store = transaction.objectStore(storeName);
       const records = rasp[storeName];
       const clearRequest = store.clear();
@@ -122,6 +135,11 @@ export const loadRasp = async (rasp) => {
       clearRequest.onsuccess = () => {
         for (const record of records) {
           if (storeName === 'UROKI' && record.IDR !== 0) continue;
+
+          if (storeName !== 'UROKI') {
+            if (!existIds[ID].has(record[ID])) continue;
+          }
+
           store.add(record);
         }
       };
