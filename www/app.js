@@ -1,21 +1,22 @@
 import { updater } from './updater.js';
-import { getDicts, getUrokiObj, getParam, onReloaded } from './db.js';
+import { getDicts, getUrokiObj, getParam, onReloaded, getMetadata } from './db.js';
 import { generateRaspHTML } from './render.js';
 
 const onlineElement = document.querySelector('.online');
 
 let lastIsOnline;
-updater.onUpdate((err, status) => {
+updater.onUpdate(async (err, status) => {
   if (err) throw err;
 
-  const { isOnLine, isWaiting, metadata } = status;
+  const { isOnLine, isWaiting } = status;
   if (!isWaiting) lastIsOnline = isOnLine;
 
+  const lastCheckedDate = await getMetadata('lastCheckedDate');
   const onLineStatusText = isWaiting && lastIsOnline
     ? '⚪'
     : isOnLine ? '🟢' : `🔴`;
   onlineElement.textContent =
-    `${metadata?.lastCheckedDate?.toLocaleString() ?? ''} ${onLineStatusText}`;
+    `${lastCheckedDate?.toLocaleString() ?? ''} ${onLineStatusText}`;
 });
 
 const filterForm = document.forms['filter-form'];
