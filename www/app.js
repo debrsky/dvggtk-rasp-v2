@@ -151,15 +151,8 @@ filterChangeHandler(filterForm);
 onReloaded(async (err) => {
   if (err) throw err;
 
-  const dicts = await getDicts();
-  fillSelects(dicts);
-
-  console.time('getParam');
-  const collegeName = await getParam('NAIM');
-  console.timeEnd('getParam');
-  console.log({ collegeName });
-
-  console.log('reloaded');
+  fillSelects(await getDicts());
+  filterChangeHandler(filterForm);
 });
 
 async function createRaspHTML(dateFrom, dateTo, groupBy) {
