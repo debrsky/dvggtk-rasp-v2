@@ -1,3 +1,4 @@
+// TODO Перенести функционал модуля в service worker
 import { openDB, deleteDB, saveMetadata, getMetadata, loadRasp } from './db.js';
 
 const savedVERSION = localStorage.getItem('VERSION');
