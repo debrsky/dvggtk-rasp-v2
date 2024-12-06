@@ -4,6 +4,23 @@ const { getDicts, getUrokiObj, getMetadata } = window.DB_CONNECTION;
 
 const PERIODIC_SYNC_MIN_INTERVAL = 60 * 60 * 1_000;
 
+let lastIsOnline;
+const onlineElement = document.querySelector('.online');
+async function updateHandler(status) {
+  const { isOnLine, isWaiting, isUpdated } = status;
+
+  if (isUpdated) reloadHandler();
+
+  if (!isWaiting) lastIsOnline = isOnLine;
+
+  const lastCheckedDate = await getMetadata('lastCheckedDate');
+  const onLineStatusText = isWaiting && lastIsOnline
+    ? '⚪'
+    : isOnLine ? '🟢' : `🔴`;
+  onlineElement.textContent =
+    `${lastCheckedDate?.toLocaleString() ?? ''} ${onLineStatusText}`;
+};
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
@@ -256,20 +273,3 @@ function addDays(dateString, days) {
 
   return `${year}-${month}-${day}`;
 }
-
-let lastIsOnline;
-const onlineElement = document.querySelector('.online');
-async function updateHandler(status) {
-  const { isOnLine, isWaiting, isUpdated } = status;
-
-  if (isUpdated) reloadHandler();
-
-  if (!isWaiting) lastIsOnline = isOnLine;
-
-  const lastCheckedDate = await getMetadata('lastCheckedDate');
-  const onLineStatusText = isWaiting && lastIsOnline
-    ? '⚪'
-    : isOnLine ? '🟢' : `🔴`;
-  onlineElement.textContent =
-    `${lastCheckedDate?.toLocaleString() ?? ''} ${onLineStatusText}`;
-};

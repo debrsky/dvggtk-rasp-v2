@@ -44,10 +44,12 @@ const startUpdater = () => {
 
 const checkUpdaterAvailability = async () => {
   let counter = 0;
+  let checkInterval = 10;
   while (!self.DB_UPDATER) {
     console.log(`[worker.js] try #${counter + 1}: updater still not loaded`);
     counter++;
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise(resolve => setTimeout(resolve, checkInterval));
+    checkInterval = 2 * checkInterval;
   }
 
   console.log(`[worker.js] try #${counter + 1}: updater loaded`);

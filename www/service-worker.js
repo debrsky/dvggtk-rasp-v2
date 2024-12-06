@@ -2,7 +2,7 @@ importScripts('./db.js', './updater.js');
 
 console.log('[service worker] starting');
 
-const CACHE_NAME = 'v5';
+const CACHE_NAME = 'v6';
 
 const sendUpdateMessage = async (err, status) => {
   if (err) console.error(err);

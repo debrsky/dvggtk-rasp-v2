@@ -2,7 +2,7 @@
   console.log('[db.js] starting');
 
   const DATABASE_NAME = 'rasp';
-  const DATABASE_VERSION = 3;
+  const DATABASE_VERSION = 5;
 
   const TABLES = [
     ['UROKI', 'ID', null],
