@@ -57,14 +57,29 @@ if ('serviceWorker' in navigator) {
   console.log('[app.js] Service worker is not supported');
 };
 
-const sharedWorker = new SharedWorker('shared-worker.js');
-sharedWorker.port.onmessage = (event) => {
-  console.log('[app.js] from shared-worker.js:', event.data);
-  const { type, payload: { status } } = event.data;
-  if (type === 'UPDATER') {
-    updateHandler(status);
-  }
-};
+try {
+  const sharedWorker = new SharedWorker('worker.js');
+  sharedWorker.port.onmessage = (event) => {
+    console.log('[app.js] from worker.js as Shared Worker:', event.data);
+    const { type, payload: { status } } = event.data;
+    if (type === 'UPDATER') {
+      updateHandler(status);
+    }
+  };
+  console.log('[app.js] use Shared Worker');
+} catch (error) {
+  console.log(error);
+  // fallback
+  const webWorker = new Worker('worker.js');
+  webWorker.onmessage = function (event) {
+    console.log('[app.js] from worker.js as Web Worker:', event.data);
+    const { type, payload: { status } } = event.data;
+    if (type === 'UPDATER') {
+      updateHandler(status);
+    }
+  };
+  console.log('[app.js] use Web Worker');
+}
 
 const filterForm = document.forms['filter-form'];
 

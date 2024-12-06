@@ -2,7 +2,7 @@ importScripts('./db.js', './updater.js');
 
 console.log('[service worker] starting');
 
-const CACHE_NAME = 'v4';
+const CACHE_NAME = 'v5';
 
 const sendUpdateMessage = async (err, status) => {
   if (err) console.error(err);
@@ -36,9 +36,8 @@ self.addEventListener('install', event => {
       return cache.addAll([
         './',
         './index.html',
-        './status.html',
         './style.css',
-        './shared-worker.js',
+        './worker.js',
         './app.js',
         './updater.js',
         './db.js',
