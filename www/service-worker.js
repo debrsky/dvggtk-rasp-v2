@@ -1,6 +1,36 @@
-const CACHE_NAME = 'v2';
+importScripts('./db.js', './updater.js');
+
+console.log('[service worker] starting');
+
+const CACHE_NAME = 'v4';
+
+const sendUpdateMessage = async (err, status) => {
+  if (err) console.error(err);
+
+  (await self.clients.matchAll()).forEach((client) => client.postMessage({
+    type: 'UPDATER',
+    payload: { status }
+  }));
+};
+
+if (self.DB_UPDATER) {
+  self.DB_UPDATER.addUpdateListener(sendUpdateMessage);
+} else {
+  let counter = 0;
+  let timerId = setInterval(() => {
+    counter++;
+    if (self.DB_UPDATER) {
+      self.DB_UPDATER.addUpdateListener(sendUpdateMessage);
+      clearInterval(timerId);
+      console.log('[services worker] updater initialized');
+    } else {
+      console.log(`[service worker] try #${counter}: updater still not loaded`);
+    }
+  }, 10);
+};
 
 self.addEventListener('install', event => {
+  console.log('[service worker] installing');
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
       return cache.addAll([
@@ -8,6 +38,7 @@ self.addEventListener('install', event => {
         './index.html',
         './status.html',
         './style.css',
+        './shared-worker.js',
         './app.js',
         './updater.js',
         './db.js',
@@ -22,19 +53,19 @@ self.addEventListener('install', event => {
   // self.skipWaiting();
 });
 
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-          return undefined;
-        })
-      );
-    })
-  );
+self.addEventListener('activate', (event) => {
+  console.log('[service worker] activating');
+  const cleanCache = caches.keys().then(cacheNames => {
+    return Promise.all(
+      cacheNames.map(cacheName => {
+        if (cacheName !== CACHE_NAME) {
+          return caches.delete(cacheName);
+        };
+      })
+    );
+  });
+
+  event.waitUntil(cleanCache);
 });
 
 self.addEventListener('fetch', event => {
@@ -74,4 +105,11 @@ self.addEventListener('fetch', event => {
       return cachedResponse || fetchPromise;
     })
   );
+});
+
+self.addEventListener('periodicsync', event => {
+  if (event.tag === 'sync-with-server') {
+    console.log('[service worker] sync-with-server triggered');
+    event.waitUntil(self.DB_UPDATER.syncWithServer());
+  }
 });

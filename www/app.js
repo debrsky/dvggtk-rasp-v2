@@ -1,23 +1,70 @@
-import { updater } from './updater.js';
-import { getDicts, getUrokiObj, getParam, onReloaded, getMetadata } from './db.js';
 import { generateRaspHTML } from './render.js';
 
-const onlineElement = document.querySelector('.online');
+const { getDicts, getUrokiObj, getMetadata } = window.DB_CONNECTION;
 
-let lastIsOnline;
-updater.onUpdate(async (err, status) => {
-  if (err) throw err;
+const PERIODIC_SYNC_MIN_INTERVAL = 60 * 60 * 1_000;
 
-  const { isOnLine, isWaiting } = status;
-  if (!isWaiting) lastIsOnline = isOnLine;
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    try {
+      const registration = await navigator.serviceWorker.register('service-worker.js')
+      console.log('[app.js] Service Worker зарегистрирован с областью:', registration.scope);
 
-  const lastCheckedDate = await getMetadata('lastCheckedDate');
-  const onLineStatusText = isWaiting && lastIsOnline
-    ? '⚪'
-    : isOnLine ? '🟢' : `🔴`;
-  onlineElement.textContent =
-    `${lastCheckedDate?.toLocaleString() ?? ''} ${onLineStatusText}`;
-});
+      const registrationReady = await navigator.serviceWorker.ready;
+      console.log('[app.js] Service Worker готов:', registrationReady);
+      registrationReady.active.postMessage({
+        type: 'UPDATER',
+        payload: { command: 'SUBSCRIBE' }
+      });
+
+      if (!('PeriodicSyncManager' in window)) {
+        console.log('[app.js] Periodic Background Sync is not supported');
+        return;
+      };
+
+      const permissionStatus = await navigator.permissions.query({
+        name: 'periodic-background-sync',
+      });
+
+      if (permissionStatus.state !== 'granted') {
+        console.log('[app.js] Periodic Background Sync is NOT granted');
+        return;
+      };
+
+      console.log('[app.js] Periodic Background Sync is granted');
+
+      await registration.periodicSync.register('sync-with-server', {
+        minInterval: PERIODIC_SYNC_MIN_INTERVAL,
+      });
+
+      console.log(
+        '[app.js] Periodic Background Sync is registered, minInterval:',
+        PERIODIC_SYNC_MIN_INTERVAL
+      );
+
+    } catch (err) {
+      console.error('[app.js] Ошибка регистрации Service Worker:', err);
+    }
+  });
+
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    console.log('[app.js] from Service Worker:', event.data);
+    const { type, payload: { status } } = event.data;
+    if (type === 'UPDATER')
+      updateHandler(status);
+  });
+} else {
+  console.log('[app.js] Service worker is not supported');
+};
+
+const sharedWorker = new SharedWorker('shared-worker.js');
+sharedWorker.port.onmessage = (event) => {
+  console.log('[app.js] from shared-worker.js:', event.data);
+  const { type, payload: { status } } = event.data;
+  if (type === 'UPDATER') {
+    updateHandler(status);
+  }
+};
 
 const filterForm = document.forms['filter-form'];
 
@@ -148,12 +195,11 @@ dateInputElement.value = today;
 fillSelects(await getDicts());
 filterChangeHandler(filterForm);
 
-onReloaded(async (err) => {
-  if (err) throw err;
-
-  fillSelects(await getDicts());
+async function reloadHandler() {
+  const dicts = await getDicts();
+  fillSelects(dicts);
   filterChangeHandler(filterForm);
-});
+};
 
 async function createRaspHTML(dateFrom, dateTo, groupBy) {
   if (!groupBy.key) throw new Error('Group key is required');
@@ -195,3 +241,20 @@ function addDays(dateString, days) {
 
   return `${year}-${month}-${day}`;
 }
+
+let lastIsOnline;
+const onlineElement = document.querySelector('.online');
+async function updateHandler(status) {
+  const { isOnLine, isWaiting, isUpdated } = status;
+
+  if (isUpdated) reloadHandler();
+
+  if (!isWaiting) lastIsOnline = isOnLine;
+
+  const lastCheckedDate = await getMetadata('lastCheckedDate');
+  const onLineStatusText = isWaiting && lastIsOnline
+    ? '⚪'
+    : isOnLine ? '🟢' : `🔴`;
+  onlineElement.textContent =
+    `${lastCheckedDate?.toLocaleString() ?? ''} ${onLineStatusText}`;
+};
