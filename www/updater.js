@@ -42,7 +42,7 @@
     },
 
     async syncWithServer() {
-      console.log('[updater.js] syncWithServer starting');
+      // console.log('[updater.js] syncWithServer starting');
       const [previousETag, previousLastModified, preiousLastCheckedDate] = await Promise.all([
         getMetadata('eTag'),
         getMetadata('lastModified'),
@@ -96,7 +96,7 @@
         this._updateHandler(null, { isOnLine: false, isUpdated: false, metadata, error });
       } finally {
         clearTimeout(timerId);
-        console.log('[updater.js] syncWithServer finished');
+        // console.log('[updater.js] syncWithServer finished');
       };
     },
 
