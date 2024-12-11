@@ -13,21 +13,25 @@ const sendUpdateMessage = async (err, status) => {
   }));
 };
 
-if (self.DB_UPDATER) {
-  self.DB_UPDATER.addUpdateListener(sendUpdateMessage);
-} else {
+const checkUpdaterAvailability = async () => {
   let counter = 0;
-  let timerId = setInterval(() => {
+  let checkInterval = 10;
+  while (!self.DB_UPDATER) {
+    if (counter > 10) throw Error('[service-worker.js] updater NOT loaded');
+
+    console.log(`[service-worker.js] try #${counter + 1}: updater still not loaded`);
     counter++;
-    if (self.DB_UPDATER) {
-      self.DB_UPDATER.addUpdateListener(sendUpdateMessage);
-      clearInterval(timerId);
-      console.log('[services worker] updater initialized');
-    } else {
-      console.log(`[service worker] try #${counter}: updater still not loaded`);
-    }
-  }, 10);
+    await new Promise(resolve => setTimeout(resolve, checkInterval));
+    checkInterval = 2 * checkInterval;
+  }
+
+  console.log(`[service-worker.js] try #${counter + 1}: updater loaded`);
 };
+
+(async () => {
+  await checkUpdaterAvailability();
+  self.DB_UPDATER.addUpdateListener(sendUpdateMessage);
+})();
 
 self.addEventListener('install', event => {
   console.log('[service worker] installing');
@@ -109,6 +113,9 @@ self.addEventListener('fetch', event => {
 self.addEventListener('periodicsync', event => {
   if (event.tag === 'sync-with-server') {
     console.log('[service worker] sync-with-server triggered');
-    event.waitUntil(self.DB_UPDATER.syncWithServer());
+    event.waitUntil((async () => {
+      await checkUpdaterAvailability();
+      await self.DB_UPDATER.syncWithServer();
+    })());
   }
 });

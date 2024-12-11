@@ -46,6 +46,8 @@ const checkUpdaterAvailability = async () => {
   let counter = 0;
   let checkInterval = 10;
   while (!self.DB_UPDATER) {
+    if (counter > 10) throw Error('[worker.js] updater NOT loaded');
+
     console.log(`[worker.js] try #${counter + 1}: updater still not loaded`);
     counter++;
     await new Promise(resolve => setTimeout(resolve, checkInterval));
